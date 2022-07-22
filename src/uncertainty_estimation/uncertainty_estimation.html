@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Knowledge sharing!</title>
+  </head>
+  <body>
+    <h2  style="color : blue; ">1. Introduce eyegaze model </h2>
+    <p>
+    - Basically, eyegaze is the eye direction which can be used to indicate where the people are look at.<br>
+    e.g The red vectors in the image below are the eyegazes of people. <br>
+    <img src="images/gaze360.png" alt="What is eyegaze" width="640" height="360"> <br>
+   
+    - Specifically in the Driver Monitor System, the eyegaze will help us to determine whether the driver’s eyes still focus on the road or not, if it’s not, then the system will make a distraction warning for the driver <br>
+    <img src="images/gazevinaidms_distraction.png" alt="Distraction when eyegaze off the road" width="640" height="360"><br>
+   
+    - Speaking of deep learning model design, the simplest  model will take the face of driver as the input —> backbone —> prediction <br>
+    <img src="images/simple_gaze_arch.png" alt="Simple eyegaze model design" width="640" height="360"><br>
+    </p>
+
+    <h2  style="color : blue; ">2.WHY need uncertainty estimation in production? </h2>
+    <p>
+      Let’s come back to Driver Monitor System. In production, there are many cases that we’ve not anticipated yet. <br>
+    </p>
+    <p>
+- <b>Case 1</b>: The data might be very different from the train data. e.g The train data will be of Asian people with yellow skin, short hair but the real-world data will be of African, American with long hair and mustache and long eyelashes, etc
+    
+    At that time, <b>the model might perform much worse, how do we detect those cases?</b>
+    
+    If we are able to detect it, we will collect data in those cases, label and add to the training dataset. It will help the model improve day by day. The more edges cases it detected, the more chance model will be improve. It is really cool, isn’t it? 
+    </p>
+    <p>
+- <b>Case 2:</b> The camera is broken somehow make the quality image become too bad or the drivers’s eyes are occluded by eyeglasses, etc , infinite situations. In such situations, we want the model saying something like <b>“Ohhh, there are something wrong with the input image, It looks so weird, I’ve not ever seen something like that so I am not quite sure about my prediction. So I think you can not use my prediction to saying the driver is distraction”.</b>
+    
+    <b>How can the model do that?</b> If there is, it is really cool, right?   
+  </p>
+
+  Therefore, if the model can estimate <b>the uncertainty of its predictions.</b> It will help us improve the model performance (like Case 1) and  robustness of the system (like Case 2)
+
+  <h2  style="color : blue; ">3. HOW to estimate uncertainty of model prediction ?</h2>
+  <p>
+    - Firstly, in term of model design, we basically just add a new node which is the <b>uncertainty node</b> <br>
+    <img src="images/gaze_arch_with_uncertaintynode.png" alt="Add new node for estimating Uncertainty" width="640" height="360"> <br>
+    - Secondly, which is more important. How to train the uncertainty node? Do we need the label to supervise?… Interestingly, the answer is No. We don’t need any more labels to supervise for the uncertainty node. The model can learn uncertainty itself if we add uncertainty to the right place in the loss function. Ok. so the magic is in the loss function. Let’s jump right to it: <br>
+    <br>
+    <b>Loss function</b><br>
+
+     + The vanilla loss function for regression problem as we know is MSE. In general cases, it usually work really well, that is why we usually using it.<br>
+          loss = sqrt((pred - gt)^2) <br>
+      <br>
+     + To handle the uncertainty, we basically just add the variance term as the denominator like <br>
+          loss = sqrt((pred - gt)^2) / <b>sigma^2</b><br> 
+
+      <br>
+      How it make sense? How the model can optimize that loss so that the <i>variance term</i> is the <b>uncertainty</b> that we want. Intuitively, let’s consider 2 cases: <br>
+      <br>
+      First case, when the input image to the model is easy (.i.e clear, high quality, no occlusion,  etc), then the <b>numerator term</b> tend to be small causing the overall loss is small.<br>
+      <br>
+      Second case, when the input image to the model is hard (.i.e blur, occlusion, etc), then the numerator term tend to be big, then in order to get the small overall loss, the <b>denominator</b> should be optimized to the larger number == high uncertainty. It is exactly what we want <b>“When the model get hard images, it should return high uncertainty”</b>, right? <br>
+      <br>
+      In conclusion, the vanilla MSE loss can only capture the <b>mean value</b> which is the blue sine curve in the image below. In other hand, the proposed loss will capture both mean value and the uncertainty which is the blue shadow area in the image below. It help us know how confidence the model is about their prediction. <br>
+      <br>
+      <img src="images/example_uncertainty_data.png" alt="Add new node for estimating Uncertainty" width="640" height="360"> <br>
+      <br>
+      
+       <b>If you want to dig deeper into that</b>, I highly recommend you to read through references below.<br>
+       - <a href="https://livebook.manning.com/book/probabilistic-deep-learning-with-python/chapter-4/157">link textProbabilistic Deep Learning Book</a> . This book talks about deep learning in the probabilistic perspective. In chapter 4, it explain very clearly about how uncertainty node is optimized without any label for it. <br><br>
+       - <a href="https://arxiv.org/abs/1703.04977">What Uncertainties Do We Need in Bayesian Deep Learning for Computer Vision?</a> <br>
+         This paper give a good overall about different kind of uncertainty. In session 3, they also explain about the loss function used to estimate the uncertainty of the prediction.<br><br>
+      - <a href="https://arxiv.org/pdf/2105.09803.pdf">Weakly-Supervised Physically Unconstrained Gaze Estimation</a>. Session <b>Aleatoric Gaze Loss</b> <br><br>
+  </p>
+
+  <h2  style="color : blue; ">4. Demostration ?</h2>
+  <p>
+    I trained the model with the proposed loss function, and it worked as expected. <br>
+    In the demostration video below, I try to act some scenarios that might happen in production. <br> <br>
+
+    <video width="960" height="540" controls>
+      <source src="images/confidence_eyegaze.mp4" type="video/mp4">
+      Eyegaze estimation with uncertainty
+    </video>
+    <br>
+    <br>
+    - When the eye are clear, then the gaze variance is small (around 0.05)<br>
+    <img src="images/demo_low_variance.png" alt="Low variance" width="640" height="360"><br>
+      <br>
+    - When the eye are occluded, then the gaze variance is bigger (around 0.25)<br>
+    <img src="images/demo_high_variance.png" alt="High variance" width="640" height="360"><br>
+  </p>
+
+  <h2  style="color : blue; ">5. How to convert uncertainty number to confidence score which range from 0-100%?</h2>
+  <p>
+    The uncertainty returned from the model is numbers like 0.05, 0.10, 0.25, etc, which is not intuitive to understand. <br>
+    So, it is neccessary to convert those uncertainty values to confidence value ranging from 0-100%. <br><br>
+
+    <b>Coming soon</b>
+  </p>
+
+
+
+
+  </body>
+</html>
