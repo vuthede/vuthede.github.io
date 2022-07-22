@@ -45,10 +45,12 @@
     <b>Loss function</b><br>
 
      + The vanilla loss function for regression problem as we know is MSE. In general cases, it usually work really well, that is why we usually using it.<br>
-          loss = sqrt((pred - gt)^2) <br>
+      <img src="images/l2.png" alt="l2" width="238" height="41"> <br>
+
       <br>
-     + To handle the uncertainty, we basically just add the variance term as the denominator like <br>
-          loss = sqrt((pred - gt)^2) / <b>sigma^2</b><br> 
+     + To handle the <b>uncertainty</b>, we basically just add the variance term as the denominator like <br>
+      <img src="images/l2_vari.png" alt="l2_vari" width="246" height="44"> <br>
+
 
       <br>
       How it make sense? How the model can optimize that loss so that the <i>variance term</i> is the <b>uncertainty</b> that we want. Intuitively, let’s consider 2 cases: <br>
