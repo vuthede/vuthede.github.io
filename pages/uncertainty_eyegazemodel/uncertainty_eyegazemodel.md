@@ -41,7 +41,8 @@ Therefore, if the model can estimate the uncertainty of its predictions. It will
 - Secondly, which is more important. How to train the uncertainty node? Do we need the label to supervise?… Interestingly, the answer is No. We don’t need any more labels to supervise for the uncertainty node. The model can learn uncertainty itself if we add uncertainty to the right place in the loss function. Ok. so the magic is in the loss function. Let’s jump right to it: 
     Loss function:
     - The vanilla loss function for regression problem as we know is MSE. In general cases, it usually work really well, that is why we usually using it. 
-    ![](images/l2.png)
+        
+        ![](images/l2.png)
     - To handle the **uncertainty**, we basically just add the variance term as the denominator like
 
         ![](images/l2_vari.png)
