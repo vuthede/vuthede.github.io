@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Uncertanty estimation for eyegaze estimation model
+title: Uncertanty estimation for eyegaze model
 description: " "
 ---
 
