@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
 
 <!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>Uncertanty estimation for eyegaze estimation model | Knowledge sharing</title>
+<title>Uncertanty estimation for eyegaze model | Knowledge sharing</title>
 <meta name="generator" content="Jekyll v4.2.2" />
-<meta property="og:title" content="Uncertanty estimation for eyegaze estimation model" />
+<meta property="og:title" content="Uncertanty estimation for eyegaze model" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="I will share some my hands-on experiences in AI projects that I have worked on" />
 <meta property="og:description" content="I will share some my hands-on experiences in AI projects that I have worked on" />
@@ -15,9 +15,9 @@
 <meta property="og:site_name" content="Knowledge sharing" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Uncertanty estimation for eyegaze estimation model" />
+<meta property="twitter:title" content="Uncertanty estimation for eyegaze model" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","description":"I will share some my hands-on experiences in AI projects that I have worked on","headline":"Uncertanty estimation for eyegaze estimation model","url":"http://localhost:4000/pages/uncertainty_eyegazemodel/uncertainty_eyegazemodel.html"}</script>
+{"@context":"https://schema.org","@type":"WebPage","description":"I will share some my hands-on experiences in AI projects that I have worked on","headline":"Uncertanty estimation for eyegaze model","url":"http://localhost:4000/pages/uncertainty_eyegazemodel/uncertainty_eyegazemodel.html"}</script>
 <!-- End Jekyll SEO tag -->
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -42,7 +42,7 @@
     <a id="skip-to-content" href="#content">Skip to the content.</a>
 
     <header class="page-header" role="banner">
-      <h1 class="project-name">Uncertanty estimation for eyegaze estimation model</h1>
+      <h1 class="project-name">Uncertanty estimation for eyegaze model</h1>
       <h2 class="project-tagline"> </h2>
       
       
@@ -100,8 +100,11 @@
     <p>Secondly, which is more important. How to train the uncertainty node? Do we need the label to supervise?… Interestingly, the answer is No. We don’t need any more labels to supervise for the uncertainty node. The model can learn uncertainty itself if we add uncertainty to the right place in the loss function. Ok. so the magic is in the loss function. Let’s jump right to it: 
   Loss function:</p>
     <ul>
-      <li>The vanilla loss function for regression problem as we know is MSE. In general cases, it usually work really well, that is why we usually using it. 
-  <img src="images/l2.png" alt="" /></li>
+      <li>
+        <p>The vanilla loss function for regression problem as we know is MSE. In general cases, it usually work really well, that is why we usually using it.</p>
+
+        <p><img src="images/l2.png" alt="" /></p>
+      </li>
       <li>
         <p>To handle the <strong>uncertainty</strong>, we basically just add the variance term as the denominator like</p>
 
