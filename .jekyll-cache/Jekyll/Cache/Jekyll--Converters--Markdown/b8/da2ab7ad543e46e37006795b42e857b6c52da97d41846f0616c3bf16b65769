@@ -1,0 +1,57 @@
+I"�<h3 id="1-introduction">1. Introduction</h3>
+<p>We all know that there are 2 main problems when training deep learning model which are overfitting and underfitting problems. Each problem have different solutions to tackle. e.g</p>
+<ul>
+  <li>With overfitting: Add more data, data augmentation, reduce complexity of model,etc</li>
+  <li>With underfitting: Using bigger model, double-check some bugs (e.g input’s unnormalized, bug in loss function causing Nan value, etc)</li>
+</ul>
+
+<h3 id="2-my-case">2. My case</h3>
+<p>At the beginning of my project, I train the eyegaze model and got the underfitting problem, the training loss looked like the image below.</p>
+
+<!-- <image here> -->
+
+<p><strong>Let’s together debug it</strong>.</p>
+
+<p>Firstly, I check the above-mentioned solutions:</p>
+<ul>
+  <li>Using bigger model. From mobilev2 –&gt; resnet50</li>
+  <li>Check if input image is normalized. Yes it is normalized.</li>
+  <li>Loss function I used was <strong>l2</strong>, and it was obvious that the loss values are the <em>normal</em> float number, there is no Nan value here.
+  \(lossgaze = \sqrt(pred - gt)^2\)</li>
+</ul>
+
+<p>Sadly, it did not fix the issue. So…, what to do next? I thought there may be <strong>inconsitence</strong> or <strong>corruption in the dataset</strong> like wrong labels or stuff like that, which might lead to model confusing and difficult to learn.</p>
+
+<p>Yeah it might be, then I decided to use a very small subdet of dataset (around only 100 samples), which I manually double-checked the quality, for training to see whether the model can even overfit it or not.  <em>This technique is mentioned on the training model recipe of Karpathy <a href="http://karpathy.github.io/2019/04/25/recipe/">overfit one batch</a></em>.</p>
+
+<p>Unfortunately, It still does not work, the training loss did not even decrease! So…, what next? Uptil now, it seems there is nothing wrong with the <em>forward pass</em> from data, label and loss function. What if there is any wrong with the <em>backward pass</em> , which actually is <strong>gradient</strong>. Yeah, let’s check it.  Below is snippet of code to log gradient and weight of any params using <em>Tensorboard</em></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="kn">from</span> <span class="nn">torch.utils.tensorboard</span> <span class="kn">import</span> <span class="n">SummaryWriter</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="k">class</span> <span class="nc">TensorBoardLogger</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="s">"./"</span><span class="p">,</span> <span class="n">experiment_name</span><span class="o">=</span><span class="s">"experiment1"</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">experiment_name</span> <span class="o">=</span> <span class="n">experiment_name</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">writer</span> <span class="o">=</span> <span class="n">SummaryWriter</span><span class="p">(</span><span class="sa">f</span><span class="s">'</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s">/</span><span class="si">{</span><span class="n">experiment_name</span><span class="si">}</span><span class="s">'</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s">"loss"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">writer</span><span class="p">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">log_hist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s">"gradient_1"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">writer</span><span class="p">.</span><span class="n">add_histogram</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">track_model_gradients</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tensorboardLogger</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">parm</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">named_parameters</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">parm</span><span class="p">,</span> <span class="s">'grad'</span><span class="p">):</span>
+            <span class="n">tensorboardLogger</span><span class="p">.</span><span class="n">log_hist</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="sa">f</span><span class="s">"gradient_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s">"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">parm</span><span class="p">.</span><span class="n">grad</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">cpu</span><span class="p">().</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">parm</span><span class="p">,</span> <span class="s">'data'</span><span class="p">):</span>
+            <span class="n">tensorboardLogger</span><span class="p">.</span><span class="n">log_hist</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="sa">f</span><span class="s">"weight_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s">"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">parm</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">cpu</span><span class="p">().</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p>Surprisingly, the <em>weight</em> of <em>fc2</em> layer of the model nearly <strong>0</strong>, which lead to <strong>gradient</strong></p>
+
+:ET

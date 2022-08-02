@@ -1,0 +1,13 @@
+I"o<h3 id="1-introduction">1. Introduction</h3>
+<p>We all know that there are 2 main problems when training deep learning model which are overfitting and underfitting problems. Each problem have different solutions to tackle. e.g</p>
+<ul>
+  <li>With overfitting: Add more data, data augmentation, reduce complexity of model,etc</li>
+  <li>With underfitting: Using bigger model, double-check some bugs (e.g input’s unnormalized, bug in loss function causing Nan value, etc)</li>
+</ul>
+
+<h3 id="2-my-case">2. My case</h3>
+<p>At the beginning of my project, I train the eyegaze model</p>
+
+<h3 id="3-solution">3. Solution</h3>
+
+:ET
