@@ -21,6 +21,7 @@ Firstly, I check the above-mentioned solutions:
 - Using bigger model. From mobilev2 --> resnet50
 - Check if input image is normalized. Yes it is normalized. 
 - Loss function I used was **l2**, and it was obvious that the loss values are the _normal_ float number, there is no Nan value here.
+
     $$ lossgaze = \sqrt(pred - gt)^2 $$
 
 Sadly, it did not fix the issue. So..., what to do next? I thought there may be **inconsitence** or **corruption in the dataset** like wrong labels or stuff like that, which might lead to model confusing and difficult to learn. 

@@ -67,8 +67,11 @@
 <ul>
   <li>Using bigger model. From mobilev2 –&gt; resnet50</li>
   <li>Check if input image is normalized. Yes it is normalized.</li>
-  <li>Loss function I used was <strong>l2</strong>, and it was obvious that the loss values are the <em>normal</em> float number, there is no Nan value here.
-  \(lossgaze = \sqrt(pred - gt)^2\)</li>
+  <li>
+    <p>Loss function I used was <strong>l2</strong>, and it was obvious that the loss values are the <em>normal</em> float number, there is no Nan value here.</p>
+
+\[lossgaze = \sqrt(pred - gt)^2\]
+  </li>
 </ul>
 
 <p>Sadly, it did not fix the issue. So…, what to do next? I thought there may be <strong>inconsitence</strong> or <strong>corruption in the dataset</strong> like wrong labels or stuff like that, which might lead to model confusing and difficult to learn.</p>

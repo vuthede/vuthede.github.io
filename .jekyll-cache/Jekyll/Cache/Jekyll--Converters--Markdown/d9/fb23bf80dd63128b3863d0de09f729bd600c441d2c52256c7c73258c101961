@@ -1,9 +1,0 @@
-I"5<ol>
-  <li><a href="./pages/uncertainty_eyegazemodel/uncertainty_eyegazemodel.html">Uncertanty estimation for deep learning model (eyegaze)</a>.</li>
-  <li><a href="./pages/debug_deeplearning_model/uncertainty_eyegazemodel.html">Debug Deep Learning model with gradient analysis.</a></li>
-  <li>Full pipeline for refining label/model training/spotting edgecase cycles.</li>
-  <li>Train multitask model.</li>
-  <li>Knowledge Distiallation for Deep Learning. Example with heatmap landmarker model.</li>
-  <li>Simple domain adaptation from RGB to IR camera.</li>
-</ol>
-:ET

@@ -1,4 +1,4 @@
-I"R0<h3 id="1-introduction">1. Introduction</h3>
+I"�2<h3 id="1-introduction">1. Introduction</h3>
 <p>We all know that there are 2 main problems when training deep learning model which are overfitting and underfitting problems. Each problem have different solutions to tackle. e.g</p>
 <ul>
   <li>With overfitting: Add more data, data augmentation, reduce complexity of model,etc</li>
@@ -17,10 +17,11 @@
   <li>Using bigger model. From mobilev2 –&gt; resnet50</li>
   <li>Check if input image is normalized. Yes it is normalized.</li>
   <li>Loss function I used was <strong>l2</strong>, and it was obvious that the loss values are the <em>normal</em> float number, there is no Nan value here.
-  \(lossgaze = \sqrt(pred - gt)^2\)</li>
+    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="err">$$</span> <span class="n">lossgaze</span> <span class="o">=</span> \<span class="n">sqrt</span><span class="p">(</span><span class="n">pred</span> <span class="o">-</span> <span class="n">gt</span><span class="p">)</span><span class="o">^</span><span class="mi">2</span> <span class="err">$$</span>
+</code></pre></div>    </div>
+    <p>Sadly, it did not fix the issue. So…, what to do next? I thought there may be <strong>inconsitence</strong> or <strong>corruption in the dataset</strong> like wrong labels or stuff like that, which might lead to model confusing and difficult to learn.</p>
+  </li>
 </ul>
-
-<p>Sadly, it did not fix the issue. So…, what to do next? I thought there may be <strong>inconsitence</strong> or <strong>corruption in the dataset</strong> like wrong labels or stuff like that, which might lead to model confusing and difficult to learn.</p>
 
 <p>Yeah it might be, then I decided to use a very small subdet of dataset (around only 100 samples), which I manually double-checked the quality, for training to see whether the model can even overfit it or not.  <em>This technique is mentioned on the training model recipe of Karpathy <a href="http://karpathy.github.io/2019/04/25/recipe/">overfit one batch</a></em>.</p>
 
@@ -75,6 +76,15 @@
         <span class="n">nn</span><span class="p">.</span><span class="n">init</span><span class="p">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">bias</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>After weights are well-initialized, then the model converge as expected.</p>
+<ul>
+  <li>
+    <p>The weights are initialized well (the left side) vs not well (the right side) 
+<img src="images/compare_gradient.png" alt="" /></p>
+  </li>
+  <li>
+    <p>When weights are initialized well, then loss starting to converge.
+  <img src="images/compare_loss.png" alt="" /></p>
+  </li>
+</ul>
 
 :ET

@@ -1,4 +1,4 @@
-I"!<h3 id="1-introduction">1. Introduction</h3>
+I"A1<h3 id="1-introduction">1. Introduction</h3>
 <p>We all know that there are 2 main problems when training deep learning model which are overfitting and underfitting problems. Each problem have different solutions to tackle. e.g</p>
 <ul>
   <li>With overfitting: Add more data, data augmentation, reduce complexity of model,etc</li>
@@ -8,7 +8,7 @@
 <h3 id="2-my-case">2. My case</h3>
 <p>At the beginning of my project, I train the eyegaze model and got the underfitting problem, the training loss looked like the image below.</p>
 
-<!-- <image here> -->
+<p><img src="images/underfit.png" alt="" /></p>
 
 <p><strong>Let’s together debug it</strong>.</p>
 
@@ -16,8 +16,11 @@
 <ul>
   <li>Using bigger model. From mobilev2 –&gt; resnet50</li>
   <li>Check if input image is normalized. Yes it is normalized.</li>
-  <li>Loss function I used was <strong>l2</strong>, and it was obvious that the loss values are the <em>normal</em> float number, there is no Nan value here.
-  \(lossgaze = \sqrt(pred - gt)^2\)</li>
+  <li>
+    <p>Loss function I used was <strong>l2</strong>, and it was obvious that the loss values are the <em>normal</em> float number, there is no Nan value here.</p>
+
+\[lossgaze = \sqrt(pred - gt)^2\]
+  </li>
 </ul>
 
 <p>Sadly, it did not fix the issue. So…, what to do next? I thought there may be <strong>inconsitence</strong> or <strong>corruption in the dataset</strong> like wrong labels or stuff like that, which might lead to model confusing and difficult to learn.</p>
@@ -45,16 +48,45 @@
 
 <span class="k">def</span> <span class="nf">track_model_gradients</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tensorboardLogger</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">parm</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">named_parameters</span><span class="p">()):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">tensorboardLogger</span><span class="p">.</span><span class="n">log_hist</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s">"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">parm</span><span class="p">.</span><span class="n">grad</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">cpu</span><span class="p">().</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">pass</span>
-        
-        <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">parm</span><span class="p">,</span> <span class="s">'grad'</span><span class="p">):</span>
+            <span class="n">tensorboardLogger</span><span class="p">.</span><span class="n">log_hist</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="sa">f</span><span class="s">"gradient_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s">"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">parm</span><span class="p">.</span><span class="n">grad</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">cpu</span><span class="p">().</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">parm</span><span class="p">,</span> <span class="s">'data'</span><span class="p">):</span>
             <span class="n">tensorboardLogger</span><span class="p">.</span><span class="n">log_hist</span><span class="p">(</span><span class="n">tag</span><span class="o">=</span><span class="sa">f</span><span class="s">"weight_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s">"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">parm</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">cpu</span><span class="p">().</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">pass</span>
 
 </code></pre></div></div>
+<p><img src="images/fail_distribution.png" alt="" /></p>
+
+<p><img src="images/fail_histrogram.png" alt="" /></p>
+
+<p>Surprisingly, the <em>weight</em> of <em>fc2</em> layer of the model  ~ <strong>0</strong>, which lead to <strong>gradient</strong> approximately <strong>0</strong> too. When <em>fc2’s gradient</em> is 0, then all the gradient of earlier layers will be 0 too due to the chain rule when do backpropagation.</p>
+
+<p>Finally, we found the reason lead to underfitting in my case is that <strong>the weights of layers are not well-intialized causing all gradients become 0</strong>.</p>
+
+<h3 id="3-solution">3. Solution</h3>
+<p>The sollution is really simple. Init the weights more carefully (.i.e avoid theirs values ~ 0). Below is the snippet of code I used.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">initialize_weights</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="p">.</span><span class="n">Conv2d</span><span class="p">):</span>
+        <span class="n">nn</span><span class="p">.</span><span class="n">init</span><span class="p">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">weight</span><span class="p">.</span><span class="n">data</span><span class="p">,</span><span class="n">nonlinearity</span><span class="o">=</span><span class="s">'relu'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">nn</span><span class="p">.</span><span class="n">init</span><span class="p">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">bias</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="p">.</span><span class="n">BatchNorm2d</span><span class="p">):</span>
+        <span class="n">nn</span><span class="p">.</span><span class="n">init</span><span class="p">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">weight</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">nn</span><span class="p">.</span><span class="n">init</span><span class="p">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">bias</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="p">.</span><span class="n">Linear</span><span class="p">):</span>
+        <span class="n">nn</span><span class="p">.</span><span class="n">init</span><span class="p">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">weight</span><span class="p">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">nn</span><span class="p">.</span><span class="n">init</span><span class="p">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">bias</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>The weights are initialized well (the left side) vs not well (the right side) 
+<img src="images/compare_gradient.png" alt="" /></p>
+  </li>
+  <li>
+    <p>When weights are initialized well, then loss starting to converge.
+  <img src="images/compare_loss.png" alt="" /></p>
+  </li>
+</ul>
 
 :ET
